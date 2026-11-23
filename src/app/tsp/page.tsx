@@ -23,8 +23,12 @@ import {
   CreeperBlock3D,
 } from "./pixelIcons";
 
-const inter = Inter({ subsets: ["latin"] });
-const space = Space_Grotesk({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const inter = Inter({ subsets: ["latin"], adjustFontFallback: false });
+const space = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  adjustFontFallback: false,
+});
 
 const domains = [
   {
