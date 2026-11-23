@@ -3,7 +3,7 @@
 "use client";
 import CommonFields from "@/components/formcomponents/CommonFields";
 import { sendSubmissionEmail } from "@/lib/sendEmail";
-import { IBM_Plex_Serif, Nunito_Sans, Poppins } from "next/font/google";
+import { Poppins } from "next/font/google";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -14,14 +14,6 @@ import "react-toastify/dist/ReactToastify.css";
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["100", "200", "300", "400", "500", "600", "700"],
-});
-const ibmPlexSerif = IBM_Plex_Serif({
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700"],
-});
-const nunitoSans = Nunito_Sans({
-  subsets: ["latin"],
-  weight: ["200", "300", "400", "600", "700", "800"],
 });
 
 type VeSheetData = {
