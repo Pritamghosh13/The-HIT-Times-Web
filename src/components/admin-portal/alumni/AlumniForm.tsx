@@ -4,6 +4,11 @@ import { Alumni } from "@/models/Alumnus";
 import { MatchImage } from "@/components/matches/MatchImage";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import uploadFile, {
+  ALLOWED_IMAGE_MIME_TYPES,
+  MAX_IMAGE_SIZE_BYTES,
+  validateImageFile,
+} from "@/lib/uploadFile";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
@@ -33,6 +38,9 @@ const AlumniForm = ({ alumniId }: AlumniFormProps) => {
     session_start: new Date().getFullYear() - 4,
     session_end: new Date().getFullYear(),
   });
+
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const loadAlumni = async (id: string) => {
     try {
@@ -90,6 +98,7 @@ const AlumniForm = ({ alumniId }: AlumniFormProps) => {
             session_start: new Date().getFullYear() - 4,
             session_end: new Date().getFullYear(),
           });
+          setFile(null);
         }
       } else {
         setMessage({
@@ -119,7 +128,68 @@ const AlumniForm = ({ alumniId }: AlumniFormProps) => {
       session_start: new Date().getFullYear() - 4,
       session_end: new Date().getFullYear(),
     });
+    setFile(null);
     setMessage({ error: false, success: false, message: "" });
+  };
+
+  const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = event.target.files?.[0];
+    if (!selected) return;
+
+    const validationError = validateImageFile(selected);
+    if (validationError) {
+      setFile(null);
+      event.target.value = "";
+      setMessage({
+        error: true,
+        success: false,
+        message: validationError,
+      });
+      return;
+    }
+
+    setMessage({ error: false, success: false, message: "" });
+    setFile(selected);
+  };
+
+  const onFileUpload = async () => {
+    if (!file) return;
+    const validationError = validateImageFile(file);
+    if (validationError) {
+      setMessage({
+        error: true,
+        success: false,
+        message: validationError,
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const imageUrl = await uploadFile(file, "/alumni", {
+        maxSizeBytes: MAX_IMAGE_SIZE_BYTES,
+        allowedTypes: ALLOWED_IMAGE_MIME_TYPES,
+      });
+      if (imageUrl) {
+        setAlumniDetails((prev) => ({ ...prev, profile_image: imageUrl }));
+        setFile(null);
+      } else {
+        setMessage({
+          error: true,
+          success: false,
+          message: "Failed to upload image.",
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      setMessage({
+        error: true,
+        success: false,
+        message: "Failed to upload image.",
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -184,6 +254,25 @@ const AlumniForm = ({ alumniId }: AlumniFormProps) => {
                 })
               }
             />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              type="file"
+              id="alumniImageInput"
+              accept="image/jpeg,image/png,image/webp"
+              className="text-sm text-muted-foreground file:mr-3 file:rounded-md file:border file:border-border file:bg-muted file:px-3 file:py-1.5 file:text-sm file:text-foreground"
+              onChange={onFileChange}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!file || uploading}
+              onClick={onFileUpload}
+            >
+              {uploading ? "Uploading…" : "Upload image"}
+            </Button>
           </div>
 
           <div className="space-y-2">
