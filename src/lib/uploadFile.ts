@@ -1,4 +1,38 @@
-export default async function uploadFile(data: any, folder: string = "/recruitment") {
+export const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+export const ALLOWED_IMAGE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+
+export interface UploadFileOptions {
+  maxSizeBytes?: number;
+  allowedTypes?: readonly string[];
+}
+
+export function validateImageFile(
+  file: File,
+  {
+    maxSizeBytes = MAX_IMAGE_SIZE_BYTES,
+    allowedTypes = ALLOWED_IMAGE_MIME_TYPES,
+  }: UploadFileOptions = {}
+): string | null {
+  if (!allowedTypes.includes(file.type)) {
+    return "Invalid file type. Only JPEG, PNG, and WebP images are allowed.";
+  }
+  if (file.size > maxSizeBytes) {
+    const maxMb = (maxSizeBytes / (1024 * 1024)).toFixed(0);
+    return `File is too large. Maximum allowed size is ${maxMb} MB.`;
+  }
+  return null;
+}
+
+export default async function uploadFile(
+  data: any,
+  folder: string = "/recruitment",
+  options?: UploadFileOptions
+) {
   try {
     if (!data) return "";
     if (typeof data === "string") return data;
@@ -8,6 +42,13 @@ export default async function uploadFile(data: any, folder: string = "/recruitme
     if (!file) {
       console.warn("No valid file object provided to uploadFile");
       return "";
+    }
+
+    if (options?.allowedTypes && !options.allowedTypes.includes(file.type)) {
+      throw new Error("Invalid file type.");
+    }
+    if (options?.maxSizeBytes && file.size > options.maxSizeBytes) {
+      throw new Error("File exceeds maximum allowed size.");
     }
 
     // 1. Fetch authentication parameters from backend
